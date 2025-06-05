@@ -382,71 +382,46 @@ const getPrincipalData = async (req, res) => {
 };
 const getUsuarioPrincipalData = async (req, res) => {
   try {
-    const usuarioId = req.usuario.id;
-
-    // Obtener todas las tareas del usuario y hacer populate para obtener info de usuarios
-    const tareas = await Tarea.find({ asignadoA: usuarioId })
+    const tareas = await Tarea.find()
       .populate("asignadoA", "nombre usuario profileImageUrl")
       .populate("creadoPor", "nombre usuario profileImageUrl");
 
-    // Verificar si hay tareas
     if (!tareas.length) {
       return res.status(404).json({ message: "No se encontraron tareas" });
     }
 
-    const totalTasks = tareas.length;
+    const totalTareas = tareas.length;
 
-    // Filtrando las tareas por estatus
-    const pendienteTareas = tareas.filter(
+    const tareasPendientes = tareas.filter(
       (t) => t.estatus === "Pendiente"
     ).length;
-    const completadoTareas = tareas.filter(
+    const tareasCompletadas = tareas.filter(
       (t) => t.estatus === "Completado"
     ).length;
-    const enProgresoTareas = tareas.filter(
+    const tareasEnProgreso = tareas.filter(
       (t) => t.estatus === "En Progreso"
     ).length;
 
-    // Filtrando por prioridad
     const tareasBajo = tareas.filter((t) => t.prioridad === "Bajo").length;
     const tareasModerado = tareas.filter(
       (t) => t.prioridad === "Moderado"
     ).length;
     const tareasAlto = tareas.filter((t) => t.prioridad === "Alto").length;
 
-    const tareaDistribucion = {
-      Pendiente: pendienteTareas,
-      EnProgreso: enProgresoTareas,
-      Completado: completadoTareas,
-    };
-
-    const taskPriorityLevels = {
-      Bajo: tareasBajo,
-      Moderado: tareasModerado,
-      Alto: tareasAlto,
-    };
-
-    // Obtener tareas recientes
-    const recentTask = tareas.slice(0, 6).map((t) => ({
-      titulo: t.titulo,
-      estatus: t.estatus,
-      prioridad: t.prioridad,
-      vencimiento: t.vencimiento,
-      createdAt: t.createdAt,
-    }));
-
-    // Enviar la respuesta estructurada
-    res.status(200).json({
-      estadisticas: {
-        totalTasks,
-        pendienteTareas,
-        completadoTareas,
-        enProgresoTareas,
+    const datosPrincipales = {
+      totalTareas,
+      tareaDistribucion: {
+        Pendiente: tareasPendientes,
+        Completado: tareasCompletadas,
+        EnProgreso: tareasEnProgreso,
+        Bajo: tareasBajo,
+        Moderado: tareasModerado,
+        Alto: tareasAlto,
       },
-      tareaDistribucion,
-      taskPriorityLevels,
-      recentTask,
-    });
+      recentTask: tareas.slice(0, 6),
+    };
+
+    res.json(datosPrincipales);
   } catch (error) {
     res
       .status(500)
