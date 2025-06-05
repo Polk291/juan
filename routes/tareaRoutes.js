@@ -18,7 +18,7 @@ router.get("/principal-data", protect, getPrincipalData);
 router.get("/usuario-data", protect, getUsuarioPrincipalData);
 router.get("/", protect, getTareas);
 router.get("/:id", protect, getTareasById);
-router.post("/", protect, adminOnly, crearTareas);
+router.post("/", protect, crearTareas);
 router.put("/:id", protect, updateTareas);
 router.delete("/:id", protect, adminOnly, deleteTareas);
 router.put("/:id/estatus", protect, updateTareasEstatus);
