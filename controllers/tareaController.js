@@ -106,12 +106,12 @@ const crearTareas = async (req, res) => {
     if (!titulo || typeof titulo !== "string") {
       return res
         .status(400)
-        .json({ message: "El titulo es requerido y debe ser una cadena." });
+        .json({ message: "El título es requerido y debe ser una cadena." });
     }
 
     if (!descripcion || typeof descripcion !== "string") {
       return res.status(400).json({
-        message: "La descripcion es requerida y debe ser una cadena.",
+        message: "La descripción es requerida y debe ser una cadena.",
       });
     }
 
@@ -133,6 +133,7 @@ const crearTareas = async (req, res) => {
         .json({ message: "La fecha de vencimiento es inválida." });
     }
 
+    // Crear la tarea
     const tarea = await Tarea.create({
       titulo,
       descripcion,
@@ -144,12 +145,22 @@ const crearTareas = async (req, res) => {
       adjuntos: adjuntos || [],
     });
 
-    res.status(201).json({ message: "Tarea creada correctamente!", tarea });
+    // Obtener los datos del usuario que creó la tarea
+    const tareaConUsuario = await Tarea.findById(tarea._id).populate(
+      "creadoPor",
+      "nombre usuario profileImageUrl"
+    );
+
+    res.status(201).json({
+      message: "Tarea creada correctamente!",
+      tarea: tareaConUsuario,
+    });
   } catch (error) {
     console.error("Error al crear la tarea:", error);
-    res
-      .status(500)
-      .json({ message: "Error de Servidor", error: error.message });
+    res.status(500).json({
+      message: "Error de Servidor",
+      error: error.message,
+    });
   }
 };
 
