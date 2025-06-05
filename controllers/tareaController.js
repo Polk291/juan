@@ -13,16 +13,18 @@ const getTareas = async (req, res) => {
     let tareas;
 
     if (req.usuario.role === "admin") {
-      tareas = await Tarea.find(filtro).populate(
-        "asignadoA",
-        "nombre usuario profileImageUrl"
-      );
+      tareas = await Tarea.find(filtro)
+        .populate("asignadoA", "nombre usuario profileImageUrl")
+        .populate("creadoPor", "nombre profileImageUrl"); // ✅ nuevo populate
     } else {
       tareas = await Tarea.find({
         ...filtro,
         asignadoA: req.usuario._id,
-      }).populate("asignadoA", "nombre usuario profileImageUrl");
+      })
+        .populate("asignadoA", "nombre usuario profileImageUrl")
+        .populate("creadoPor", "nombre profileImageUrl"); // ✅ nuevo populate
     }
+
     tareas = await Promise.all(
       tareas.map(async (tarea) => {
         const cuentaCompleta = tarea.chequeoLista.filter(
