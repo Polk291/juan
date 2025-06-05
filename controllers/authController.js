@@ -13,7 +13,25 @@ const generateToken = (usuarioId) => {
 //@desc Registro Usuario
 //@route POST /api/auth/registro
 //@access Public
+const generateInitialsImage = (name) => {
+  if (!name) return "";
 
+  const initials = name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+      <rect width="100" height="100" fill="#ccc" />
+      <text x="50" y="55" font-size="40" fill="#555" text-anchor="middle" font-family="Arial" dy=".3em">${initials}</text>
+    </svg>
+  `;
+
+  return `data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`;
+};
 const registroUsuario = async (req, res) => {
   try {
     const { nombre, usuario, clave, profileImageUrl, adminInviteToken } =
