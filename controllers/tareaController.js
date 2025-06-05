@@ -12,17 +12,22 @@ const getTareas = async (req, res) => {
 
     let tareas;
 
-    if (req.usuario.role === "admin") {
+    const isAdmin = req.usuario.role === "admin";
+    const isMember = req.usuario.role === "member";
+
+    if (isAdmin) {
       tareas = await Tarea.find(filtro)
         .populate("asignadoA", "nombre usuario profileImageUrl")
-        .populate("creadoPor", "nombre profileImageUrl"); // ✅ nuevo populate
-    } else {
+        .populate("creadoPor", "nombre profileImageUrl");
+    } else if (isMember) {
       tareas = await Tarea.find({
         ...filtro,
         asignadoA: req.usuario._id,
       })
         .populate("asignadoA", "nombre usuario profileImageUrl")
-        .populate("creadoPor", "nombre profileImageUrl"); // ✅ nuevo populate
+        .populate("creadoPor", "nombre profileImageUrl");
+    } else {
+      return res.status(403).json({ message: "Rol no autorizado" });
     }
 
     tareas = await Promise.all(
@@ -35,25 +40,25 @@ const getTareas = async (req, res) => {
     );
 
     const allTareas = await Tarea.countDocuments(
-      req.usuario.role === "admin" ? {} : { asignadoA: req.usuario._id }
+      isAdmin ? {} : { asignadoA: req.usuario._id }
     );
 
     const pendienteTareas = await Tarea.countDocuments({
       ...filtro,
       estatus: "Pendiente",
-      ...(req.usuario.role !== "admin" && { asignadoA: req.usuario._id }),
+      ...(!isAdmin && { asignadoA: req.usuario._id }),
     });
 
     const enProgresoTareas = await Tarea.countDocuments({
       ...filtro,
       estatus: "En Progreso",
-      ...(req.usuario.role !== "admin" && { asignadoA: req.usuario._id }),
+      ...(!isAdmin && { asignadoA: req.usuario._id }),
     });
 
     const completadoTareas = await Tarea.countDocuments({
       ...filtro,
       estatus: "Completado",
-      ...(req.usuario.role !== "admin" && { asignadoA: req.usuario._id }),
+      ...(!isAdmin && { asignadoA: req.usuario._id }),
     });
 
     res.json({
