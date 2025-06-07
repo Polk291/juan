@@ -18,6 +18,7 @@ const getTareas = async (req, res) => {
     let tareas = await Tarea.find(filtro)
       .populate("asignadoA", "nombre usuario profileImageUrl")
       .populate("creadoPor", "nombre profileImageUrl");
+    console.log("Tareas encontradas:", tareas.length);
 
     tareas = await Promise.all(
       tareas.map(async (tarea) => {
@@ -29,9 +30,8 @@ const getTareas = async (req, res) => {
     );
 
     const allTareas = await Tarea.countDocuments({
-      asignadoA: req.usuario._id,
+      asignadoA: { $in: [req.usuario._id] },
     });
-
     const pendienteTareas = await Tarea.countDocuments({
       ...filtro,
       estatus: "Pendiente",
