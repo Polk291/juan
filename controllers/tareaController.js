@@ -322,8 +322,12 @@ const getPrincipalData = async (req, res) => {
       .populate("asignadoA", "nombre usuario profileImageUrl")
       .populate("creadoPor", "nombre usuario profileImageUrl");
 
-    if (!tareas.length) {
-      return res.status(404).json({ message: "No se encontraron tareas" });
+    if (!tareas || !Array.isArray(tareas) || tareas.length === 0) {
+      return res.status(200).json({
+        totalTareas: 0,
+        tareaDistribucion: {},
+        recentTask: [],
+      });
     }
 
     const totalTareas = tareas.length;
