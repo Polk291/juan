@@ -13,12 +13,11 @@ const getTareas = async (req, res) => {
     }
 
     // Ya no validamos rol, simplemente filtramos tareas asignadas al usuario
-    filtro.asignadoA = req.usuario._id;
+    filtro.asignadoA = { $in: [req.usuario._id] };
 
     let tareas = await Tarea.find(filtro)
       .populate("asignadoA", "nombre usuario profileImageUrl")
       .populate("creadoPor", "nombre profileImageUrl");
-    console.log("Tareas encontradas:", tareas.length);
 
     tareas = await Promise.all(
       tareas.map(async (tarea) => {
@@ -227,8 +226,8 @@ const deleteTareas = async (req, res) => {
 
 const updateTareasEstatus = async (req, res) => {
   try {
-    const tarea1 = await Tarea.findById(req.params.id);
-    if (tarea1) return res.status(404).json({ message: "Tarea no Encontrada" });
+    const tarea = await Tarea.findById(req.params.id); // Cambié tarea1 a tarea
+    if (!tarea) return res.status(404).json({ message: "Tarea no Encontrada" });
 
     const isAsignado = tarea.asignadoA.some(
       (usuarioId) => usuarioId.toString() === req.usuario._id.toString()
