@@ -2,6 +2,8 @@ const Tarea = require("../models/Tarea");
 const Usuario = require("../models/Usuario");
 
 const getTareas = async (req, res) => {
+  console.log("Usuario desde middleware protect:", req.usuario);
+  console.log("Query estatus:", req.query.estatus);
   try {
     const { estatus } = req.query;
     let filtro = {};
