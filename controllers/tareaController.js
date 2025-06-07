@@ -12,8 +12,12 @@ const getTareas = async (req, res) => {
       filtro.estatus = estatus;
     }
 
-    // Ya no validamos rol, simplemente filtramos tareas asignadas al usuario
-    filtro.asignadoA = { $in: [req.usuario._id] };
+    // Si es admin o member, mostramos todas las tareas (sin filtro asignadoA)
+    if (req.usuario.role === "admin" || req.usuario.role === "member") {
+      // filtro queda solo por estatus si aplica
+    } else {
+      return res.status(403).json({ message: "Acceso no autorizado" });
+    }
 
     let tareas = await Tarea.find(filtro)
       .populate("asignadoA", "nombre usuario profileImageUrl")
@@ -28,23 +32,29 @@ const getTareas = async (req, res) => {
       })
     );
 
-    const allTareas = await Tarea.countDocuments({
-      asignadoA: { $in: [req.usuario._id] },
-    });
-    const pendienteTareas = await Tarea.countDocuments({
-      ...filtro,
-      estatus: "Pendiente",
-    });
+    // Contadores para resumen según filtro de estatus
+    const allTareasCountFiltro = {};
+    const pendienteTareasCountFiltro = { estatus: "Pendiente" };
+    const enProgresoTareasCountFiltro = { estatus: "En Progreso" };
+    const completadoTareasCountFiltro = { estatus: "Completado" };
 
-    const enProgresoTareas = await Tarea.countDocuments({
-      ...filtro,
-      estatus: "En Progreso",
-    });
+    if (estatus) {
+      allTareasCountFiltro.estatus = estatus;
+      pendienteTareasCountFiltro.estatus = estatus;
+      enProgresoTareasCountFiltro.estatus = estatus;
+      completadoTareasCountFiltro.estatus = estatus;
+    }
 
-    const completadoTareas = await Tarea.countDocuments({
-      ...filtro,
-      estatus: "Completado",
-    });
+    const allTareas = await Tarea.countDocuments(allTareasCountFiltro);
+    const pendienteTareas = await Tarea.countDocuments(
+      pendienteTareasCountFiltro
+    );
+    const enProgresoTareas = await Tarea.countDocuments(
+      enProgresoTareasCountFiltro
+    );
+    const completadoTareas = await Tarea.countDocuments(
+      completadoTareasCountFiltro
+    );
 
     res.json({
       tareas,
