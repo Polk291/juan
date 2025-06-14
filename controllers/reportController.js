@@ -4,7 +4,26 @@ const excelJS = require("exceljs");
 
 const exportTareaReport = async (req, res) => {
   try {
-    const tareas = await Tarea.find().populate("asignadoA", "nombre usuario");
+    const { desde, hasta } = req.query;
+
+    const filtroFecha = {};
+    if (desde || hasta) {
+      filtroFecha.createdAt = {};
+      if (desde) {
+        filtroFecha.createdAt.$gte = new Date(desde);
+      }
+      if (hasta) {
+        // Para incluir todo el día hasta las 23:59:59
+        const hastaFinDia = new Date(hasta);
+        hastaFinDia.setHours(23, 59, 59, 999);
+        filtroFecha.createdAt.$lte = hastaFinDia;
+      }
+    }
+
+    const tareas = await Tarea.find(filtroFecha).populate(
+      "asignadoA",
+      "nombre usuario"
+    );
 
     const workbook = new excelJS.Workbook();
     const worksheet = workbook.addWorksheet("Reporte de Tareas");
@@ -18,6 +37,7 @@ const exportTareaReport = async (req, res) => {
       { header: "Fecha de Vencimiento", key: "vencimiento", width: 20 },
       { header: "Usuarios Asignados", key: "asignadoA", width: 30 },
     ];
+
     tareas.forEach((tarea) => {
       const asignadoA = tarea.asignadoA
         .map((usuario) => `${usuario.nombre} (${usuario.usuario})`)
@@ -28,7 +48,7 @@ const exportTareaReport = async (req, res) => {
         descripcion: tarea.descripcion,
         prioridad: tarea.prioridad,
         estatus: tarea.estatus,
-        vencimiento: tarea.vencimiento.toISOString().split("T")[0],
+        vencimiento: tarea.vencimiento?.toISOString().split("T")[0] || "",
         asignadoA: asignadoA || "Sin Asignacion",
       });
     });
@@ -38,7 +58,7 @@ const exportTareaReport = async (req, res) => {
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     );
     res.setHeader(
-      "Content-Disposititon",
+      "Content-Disposition",
       'attachment; filename="reporte_de_tarea.xlsx"'
     );
 
@@ -46,9 +66,10 @@ const exportTareaReport = async (req, res) => {
       res.end();
     });
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error al exportar las tareas!", error: error.message });
+    res.status(500).json({
+      message: "Error al exportar las tareas!",
+      error: error.message,
+    });
   }
 };
 
