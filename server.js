@@ -48,9 +48,9 @@ const server = app.listen(PORT, () =>
 
 // ⏱️ Auto-ping cada 4 segundos (mantener activo)
 const SELF_URL = process.env.SELF_URL || `http://localhost:${PORT}`;
-setInterval(() => {
-  axios
-    .get(SELF_URL)
-    .then(() => console.log("Ping exitoso a la raíz"))
-    .catch((err) => console.error("Error en el ping:", err.message));
-}, 4000); // 4000 ms = 4 segundos
+//setInterval(() => {
+ // axios
+//    .get(SELF_URL)
+//    .then(() => console.log("Ping exitoso a la raíz"))
+//    .catch((err) => console.error("Error en el ping:", err.message));
+//}, 4000); // 4000 ms = 4 segundos
